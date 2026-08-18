@@ -50,6 +50,7 @@ export const RoadmapPage: React.FC = () => {
     if (!roleToGen.trim()) return;
     setGeneratingAgent(true);
     try {
+      await api.setPrimaryTargetJob(roleToGen.trim());
       const res = await api.generateAgentRoadmap(roleToGen.trim());
       setTargetJob(res.target_job);
       setSteps(res.steps);

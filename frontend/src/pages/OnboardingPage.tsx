@@ -10,6 +10,8 @@ import {
   ArrowRight,
   Sparkles,
   Cpu,
+  Target,
+  Zap,
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -32,8 +34,9 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
   const [skills, setSkills] = useState<string[]>(['Python', 'SQL', 'Git', 'REST API', 'Django']);
   const [newSkillInput, setNewSkillInput] = useState('');
 
-  // Step 3 State
+  // Step 3 State (Interested Role & Career Preferences)
   const [targetJobs, setTargetJobs] = useState<string[]>(['Python Developer']);
+  const [customRoleInput, setCustomRoleInput] = useState('');
   const [preferredJobType, setPreferredJobType] = useState('Full-time');
   const [remotePreference, setRemotePreference] = useState('Hybrid');
   const [preferredIndustry, setPreferredIndustry] = useState('Technology');
@@ -46,6 +49,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
     'AI/ML Engineer',
     'Cloud Engineer',
     'Software Developer',
+    'DevOps Engineer',
+    'Fullstack Engineer',
   ];
 
   const popularSkillsList = [
@@ -96,36 +101,37 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
     setStep(3);
   };
 
-  // Handle Step 3 Submit
+  // Handle Step 3 Submit (Save Interested Target Role & Generate Roadmap)
   const handleFinishProfile = async () => {
     try {
+      const finalJobs = [...targetJobs];
+      if (customRoleInput.trim() && !finalJobs.includes(customRoleInput.trim())) {
+        finalJobs.unshift(customRoleInput.trim());
+      }
+
+      const primaryRole = finalJobs[0] || 'Python Developer';
+
       await api.updateProfileStep3({
-        target_jobs: targetJobs,
+        target_jobs: finalJobs,
         preferred_location: preferredLocation,
         remote_preference: remotePreference,
         preferred_job_type: preferredJobType,
         preferred_industry: preferredIndustry,
       });
+
+      await api.setPrimaryTargetJob(primaryRole);
+
       onComplete();
-      navigate('/dashboard');
+      navigate('/roadmap');
     } catch (err: any) {
       alert('Error finishing setup: ' + err.message);
-      navigate('/dashboard');
+      navigate('/roadmap');
     }
   };
 
-  const toggleTargetJob = (jobTitle: string) => {
-    if (targetJobs.includes(jobTitle)) {
-      if (targetJobs.length > 1) {
-        setTargetJobs(targetJobs.filter((j) => j !== jobTitle));
-      }
-    } else {
-      if (targetJobs.length < 3) {
-        setTargetJobs([...targetJobs, jobTitle]);
-      } else {
-        alert('You can select up to 3 target jobs.');
-      }
-    }
+  const setPrimaryRole = (jobTitle: string) => {
+    const filtered = targetJobs.filter((j) => j !== jobTitle);
+    setTargetJobs([jobTitle, ...filtered].slice(0, 3));
   };
 
   const addSkill = (skName: string) => {
@@ -139,6 +145,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
     setSkills(skills.filter((s) => s !== skName));
   };
 
+  const primaryRoleDisplay = targetJobs[0] || 'Python Developer';
+
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 py-8">
       {/* Step Indicator Header */}
@@ -146,7 +154,7 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
         <div className="flex items-center justify-between text-xs font-bold text-slate-400 mb-2">
           <span>Step {step} of 3</span>
           <span className="text-indigo-400">
-            {step === 1 ? 'Basic Profile' : step === 2 ? 'Skills Portfolio' : 'Career Preferences'}
+            {step === 1 ? 'Basic Profile' : step === 2 ? 'Skills Portfolio' : 'Interested Target Role'}
           </span>
         </div>
         <div className="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
@@ -358,50 +366,85 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
           </div>
         )}
 
-        {/* STEP 3: Target Job Selection */}
+        {/* STEP 3: Interested Target Role Selection */}
         {step === 3 && (
           <div className="space-y-6">
             <div>
               <h3 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                <Briefcase className="w-5 h-5 text-indigo-400" /> Select Target Job (Up to 3)
+                <Briefcase className="w-5 h-5 text-indigo-400" /> Select Interested Target Role
               </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Select your target job role. We will use this to calculate your Job Readiness & Skill Gap.
+                Choose your interested career role. Our AI engine will immediately synthesize your personalized learning roadmap based on this choice.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {availableJobsList.map((job) => {
-                const isSelected = targetJobs.includes(job);
-                const isPrimary = targetJobs[0] === job;
-                return (
-                  <div
-                    key={job}
-                    onClick={() => toggleTargetJob(job)}
-                    className={`p-3.5 rounded-xl border cursor-pointer flex items-center justify-between transition-all ${
-                      isSelected
-                        ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-md'
-                        : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center ${
-                          isSelected ? 'border-indigo-400 bg-indigo-600' : 'border-slate-600'
-                        }`}
-                      >
-                        {isSelected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+            {/* AI Roadmap Notice Banner */}
+            <div className="p-4 bg-indigo-500/10 border border-indigo-500/30 rounded-2xl flex items-start gap-3 text-xs text-indigo-300">
+              <Zap className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
+              <div>
+                <span className="font-bold text-white block mb-0.5">AI Reskilling Roadmap Integration</span>
+                Your selected role (<strong>{primaryRoleDisplay}</strong>) directly dictates your reskilling roadmap steps, milestone timelines, practice projects, and skill gap matrix.
+              </div>
+            </div>
+
+            {/* Popular Role Cards */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-2">Select Your Interested Role:</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {availableJobsList.map((job) => {
+                  const isPrimary = targetJobs[0] === job;
+                  return (
+                    <div
+                      key={job}
+                      onClick={() => {
+                        setPrimaryRole(job);
+                        setCustomRoleInput('');
+                      }}
+                      className={`p-3.5 rounded-xl border cursor-pointer flex items-center justify-between transition-all ${
+                        isPrimary
+                          ? 'bg-indigo-600/20 border-indigo-500 text-white shadow-md shadow-indigo-600/10'
+                          : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-4 h-4 rounded-full border flex items-center justify-center ${
+                            isPrimary ? 'border-indigo-400 bg-indigo-600' : 'border-slate-600'
+                          }`}
+                        >
+                          {isPrimary && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                        </div>
+                        <span className="text-xs font-semibold">{job}</span>
                       </div>
-                      <span className="text-xs font-semibold">{job}</span>
+                      {isPrimary && (
+                        <span className="text-[10px] uppercase font-extrabold tracking-wider bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded">
+                          Primary Role
+                        </span>
+                      )}
                     </div>
-                    {isPrimary && (
-                      <span className="text-[10px] uppercase font-extrabold tracking-wider bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded">
-                        Primary
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Custom Interested Role Field */}
+            <div className="space-y-1.5 bg-slate-950 p-4 rounded-2xl border border-slate-800">
+              <label className="block text-xs font-semibold text-slate-300">Or Type a Custom Interested Role:</label>
+              <div className="relative">
+                <Target className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  value={customRoleInput}
+                  onChange={(e) => {
+                    setCustomRoleInput(e.target.value);
+                    if (e.target.value.trim()) {
+                      setPrimaryRole(e.target.value.trim());
+                    }
+                  }}
+                  placeholder="e.g. Cybersecurity Analyst, Data Engineer, iOS Developer..."
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:border-indigo-500"
+                />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-950 p-4 rounded-2xl border border-slate-800">
@@ -442,8 +485,8 @@ export const OnboardingPage: React.FC<OnboardingPageProps> = ({ onComplete }) =>
                 onClick={handleFinishProfile}
                 className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 shadow-xl shadow-indigo-600/20"
               >
-                <span>Finish Profile</span>
-                <CheckCircle className="w-4 h-4" />
+                <span>Finish Profile & View My Roadmap</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
