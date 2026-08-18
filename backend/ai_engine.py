@@ -449,57 +449,489 @@ def generate_reskilling_roadmap(target_job: str, missing_skills: List[str], stro
     
     return steps
 
-def generate_ai_test_questions(target_job: str, ongoing_module: Optional[str] = None) -> List[Dict[str, Any]]:
-    """AI Engine dynamically synthesizes test questions based on the candidate's PRESENT ONGOING ROADMAP MODULE."""
-    module_name = ongoing_module or "REST API & Architecture"
-    
-    q_pool = [
+def get_module_category(module_name: str) -> str:
+    m = module_name.lower()
+    if any(k in m for k in ["python", "django", "fastapi"]):
+        return "python"
+    elif any(k in m for k in ["sql", "postgres", "database", "orm", "indexing", "mysql"]):
+        return "sql"
+    elif any(k in m for k in ["docker", "container", "kubernetes", "k8s"]):
+        return "docker"
+    elif any(k in m for k in ["aws", "cloud", "terraform", "devops", "ci/cd"]):
+        return "aws"
+    elif any(k in m for k in ["react", "javascript", "typescript", "frontend", "html", "css", "node"]):
+        return "react"
+    elif any(k in m for k in ["machine learning", "ml", "pytorch", "pandas", "numpy", "ai", "vector"]):
+        return "ml"
+    elif any(k in m for k in ["rest api", "api", "backend", "web"]):
+        return "api"
+    elif any(k in m for k in ["system design", "microservice", "redis", "architecture", "cache"]):
+        return "system_design"
+    else:
+        return "general"
+
+MODULE_MCQ_BANK = {
+    "python": [
         {
-            "id": 1,
-            "text": f"In {module_name}, what is the primary role of request payload validation and data type enforcement?",
-            "opts": ["To render CSS styles", "To validate incoming request payloads before business logic execution and prevent malformed data errors", "To compile bytecode", "To format HTML"],
-            "ans": "B",
-            "cat": module_name,
-            "diff": "Easy"
-        },
-        {
-            "id": 2,
-            "text": f"When implementing {module_name}, which HTTP status code confirms that a new resource instance was successfully created?",
-            "opts": ["200 OK", "201 Created", "404 Not Found", "500 Internal Error"],
-            "ans": "B",
-            "cat": module_name,
-            "diff": "Easy"
-        },
-        {
-            "id": 3,
-            "text": f"In production {module_name} systems, how does database connection pooling optimize throughput under concurrent user load?",
-            "opts": ["By deleting old database tables", "By reusing established database TCP sockets to eliminate connection setup overhead latency", "By converting SQL queries to JSON", "By styling forms"],
-            "ans": "B",
-            "cat": module_name,
+            "text": "What is the primary memory difference between a Python List Comprehension and a Generator Expression?",
+            "opts": [
+                "Generator Expressions compute items lazily one-by-one in O(1) memory, while List Comprehensions evaluate all items into memory at once.",
+                "List Comprehensions use less memory than Generator Expressions.",
+                "Generator Expressions create immutable tuples in RAM.",
+                "There is no performance or memory difference."
+            ],
+            "ans": "A",
             "diff": "Medium"
         },
         {
-            "id": 4,
-            "text": f"How does B-Tree indexing on frequently filtered WHERE and JOIN columns improve performance in {module_name} datastores?",
-            "opts": ["By compressing storage", "By reducing disk I/O scans and executing fast logarithmic index lookups", "By encrypting keys", "By replacing SQL queries"],
+            "text": "In CPython, what is the Global Interpreter Lock (GIL) and how can CPU-bound tasks bypass it?",
+            "opts": [
+                "The GIL locks database connections; bypass it using SQL joins.",
+                "The GIL enforces single-thread execution per CPython process; CPU-bound tasks bypass it using the `multiprocessing` module or C extensions.",
+                "The GIL accelerates multithreaded math operations automatically.",
+                "The GIL is a garbage collector flag."
+            ],
             "ans": "B",
-            "cat": module_name,
+            "diff": "Hard"
+        },
+        {
+            "text": "In Python object-oriented design, what is the primary benefit of defining `__slots__` in a class definition?",
+            "opts": [
+                "It restricts instantiating the class more than once.",
+                "It suppresses creation of `__dict__`, significantly reducing memory footprint when instantiating millions of objects.",
+                "It automatically converts methods to static methods.",
+                "It enables automatic multi-threading."
+            ],
+            "ans": "B",
+            "diff": "Hard"
+        },
+        {
+            "text": "When using decorators in Python (`@my_decorator`), when is the decorator function executed?",
+            "opts": [
+                "Every time the decorated function is invoked at runtime.",
+                "Once at module import/definition time when the function is defined.",
+                "Only when an exception is thrown.",
+                "Inside the garbage collector cycle."
+            ],
+            "ans": "B",
             "diff": "Medium"
         },
         {
-            "id": 5,
-            "text": f"In high-scale {module_name} architectures, how does distributed Redis caching mitigate database Thundering Herd crashes?",
-            "opts": ["By running background log deletion", "By serving warm cached data with mutex locks and TTL stale-while-revalidate shielding the database", "By deleting user accounts", "By compiling to assembly"],
+            "text": "What is the result of using `async def` and `await` in Python asynchronous frameworks like FastAPI?",
+            "opts": [
+                "It runs Python code on multiple CPU cores simultaneously.",
+                "It yields control back to the event loop during I/O wait times, allowing concurrent handling of incoming requests.",
+                "It encrypts request payloads in RAM.",
+                "It compiles Python to native C assembly."
+            ],
             "ans": "B",
-            "cat": module_name,
+            "diff": "Medium"
+        }
+    ],
+    "sql": [
+        {
+            "text": "In relational databases, what is the fundamental difference between `WHERE` and `HAVING` clauses?",
+            "opts": [
+                "WHERE filters rows before aggregation, while HAVING filters aggregated groups after GROUP BY execution.",
+                "HAVING filters individual rows before JOIN operations.",
+                "WHERE can only be used with subqueries.",
+                "HAVING is used exclusively for string matching."
+            ],
+            "ans": "A",
+            "diff": "Easy"
+        },
+        {
+            "text": "Which ACID property guarantees that all operations within a database transaction succeed completely or roll back without partial state changes?",
+            "opts": ["Consistency", "Atomicity", "Isolation", "Durability"],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "Why does a B-Tree index significantly accelerate SELECT queries with WHERE range or equality conditions?",
+            "opts": [
+                "It compresses all string data to 1 byte.",
+                "It converts full table O(N) disk scans into logarithmic O(log N) index tree traversals.",
+                "It disables table locking completely.",
+                "It caches query results in browser localStorage."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "How do database connection pools optimize backend database performance under heavy concurrent load?",
+            "opts": [
+                "By dropping slow SQL queries automatically.",
+                "By maintaining a pool of pre-established TCP connections, eliminating connection setup/teardown latency for every request.",
+                "By converting SQL tables into static JSON files.",
+                "By executing all queries in a single background thread."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "What is the primary vulnerability prevented by utilizing Parameterized Queries / Prepared Statements in SQL interactions?",
+            "opts": [
+                "Cross-Site Scripting (XSS)",
+                "SQL Injection (SQLi) attacks",
+                "Buffer Overflow crashes",
+                "Cross-Site Request Forgery (CSRF)"
+            ],
+            "ans": "B",
+            "diff": "Easy"
+        }
+    ],
+    "docker": [
+        {
+            "text": "In Docker containerization, what is the key difference between a Docker Image and a Docker Container?",
+            "opts": [
+                "An Image is a read-only template with application code and dependencies; a Container is an isolated runnable instance with a thin writable layer.",
+                "A Container is stored on disk while an Image only exists in RAM.",
+                "Docker Images require Virtual Machine hypervisors.",
+                "There is no difference."
+            ],
+            "ans": "A",
+            "diff": "Easy"
+        },
+        {
+            "text": "Why are Multi-Stage Dockerfile builds used in production containerization pipelines?",
+            "opts": [
+                "To run multiple containers inside a single image.",
+                "To separate build-time SDK dependencies from the final runtime stage, drastically reducing final image size and attack surface.",
+                "To execute database migrations automatically.",
+                "To bypass Docker daemon permissions."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "In Docker Compose, what is the primary role of specifying volume mounts (`volumes: - ./data:/app/data`)?",
+            "opts": [
+                "To speed up container CPU execution.",
+                "To persist data outside the container lifecycle so data survives container restarts and updates.",
+                "To encrypt network traffic between containers.",
+                "To limit memory allocation."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "In Kubernetes clusters, what is the smallest deployable computing unit that encapsulates one or more containers?",
+            "opts": ["Deployment", "Pod", "Service", "Namespace"],
+            "ans": "B",
+            "diff": "Easy"
+        },
+        {
+            "text": "Which Docker network driver enables isolated container communication across multiple physical host nodes in a swarm cluster?",
+            "opts": ["bridge", "host", "overlay", "none"],
+            "ans": "C",
+            "diff": "Hard"
+        }
+    ],
+    "aws": [
+        {
+            "text": "In AWS cloud infrastructure, what is the main distinction between IAM Users and IAM Roles?",
+            "opts": [
+                "Users have passwords; Roles are assumed temporary credentials for applications or AWS services without permanent security keys.",
+                "IAM Roles can only be assigned to human employees.",
+                "IAM Users cannot be granted administrator access.",
+                "IAM Roles cost extra per hour."
+            ],
+            "ans": "A",
+            "diff": "Medium"
+        },
+        {
+            "text": "How do Auto Scaling Groups (ASG) combined with Application Load Balancers (ALB) maintain application availability during sudden traffic spikes?",
+            "opts": [
+                "By dynamically launching additional EC2 instances based on CPU/network thresholds and distributing incoming requests across healthy instances.",
+                "By compressing network packets at the DNS level.",
+                "By restarting database instances automatically.",
+                "By caching static files in S3."
+            ],
+            "ans": "A",
+            "diff": "Medium"
+        },
+        {
+            "text": "What is the primary benefit of Infrastructure as Code (IaC) tools like Terraform or AWS CloudFormation?",
+            "opts": [
+                "They generate application UI components.",
+                "They allow declarative definition, version control, and automated provisioning of cloud infrastructure.",
+                "They replace backend application code.",
+                "They provide free cloud hosting."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "Which AWS storage service provides scalable, highly durable object storage accessible via REST HTTP APIs?",
+            "opts": ["Amazon EBS", "Amazon S3", "Amazon EFS", "Amazon EC2 Instance Store"],
+            "ans": "B",
+            "diff": "Easy"
+        },
+        {
+            "text": "In serverless AWS architectures, what triggers execution of an AWS Lambda function?",
+            "opts": [
+                "A continuous background OS process.",
+                "Event sources such as API Gateway HTTP requests, S3 uploads, or DynamoDB stream updates.",
+                "Manual human button clicks only.",
+                "Cron jobs running inside EC2 instances."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        }
+    ],
+    "react": [
+        {
+            "text": "In React applications, why should state never be mutated directly (e.g., `state.count = 5`)?",
+            "opts": [
+                "Direct mutation skips React's re-render trigger and Virtual DOM diffing process, causing UI state desynchronization.",
+                "Direct mutation throws a JavaScript syntax error.",
+                "Direct mutation deletes component props.",
+                "Direct mutation turns off TypeScript checking."
+            ],
+            "ans": "A",
+            "diff": "Easy"
+        },
+        {
+            "text": "What is the purpose of the dependency array in React's `useEffect` hook (`useEffect(fn, [dep1])`)?",
+            "opts": [
+                "It specifies CSS stylesheets to load.",
+                "It tells React to re-run the effect function only when specified dependency values change between renders.",
+                "It imports external npm packages.",
+                "It formats JSON responses."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "How does React's Virtual DOM reconciliation algorithm optimize DOM manipulation performance?",
+            "opts": [
+                "By bypassing the browser DOM entirely.",
+                "By computing lightweight tree diffs in memory and applying batch updates to the real DOM only for changed elements.",
+                "By running all components on a GPU shader.",
+                "By converting JavaScript to WebAssembly."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "What is the main advantage of using `useCallback` hook in React component performance tuning?",
+            "opts": [
+                "It caches expensive calculation values.",
+                "It returns a memoized callback instance to prevent child components from unnecessary re-renders when parent renders.",
+                "It fetches data asynchronously.",
+                "It manages Redux store state."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "In JavaScript event handling, what is the difference between the Event Loop microtask queue and macrotask queue?",
+            "opts": [
+                "Microtasks (Promises, process.nextTick) execute immediately after the current operation finishes before rendering; Macrotasks (setTimeout, setInterval) run on subsequent iterations.",
+                "Macrotasks always execute before Microtasks.",
+                "Microtasks only run in Node.js while Macrotasks only run in browsers.",
+                "There is no difference."
+            ],
+            "ans": "A",
+            "diff": "Hard"
+        }
+    ],
+    "ml": [
+        {
+            "text": "In machine learning model training, what is Overfitting and how can it be mitigated?",
+            "opts": [
+                "When a model performs poorly on training data; fix it by making the model more complex.",
+                "When a model memorizes noise in training data and fails to generalize; fix it using Regularization (L1/L2), Dropout, or Cross-Validation.",
+                "When a dataset has missing values; fix it by deleting all rows.",
+                "When gradient descent converges too fast."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "What evaluation metric is best suited for assessing a classifier on a highly imbalanced dataset (e.g. 99% negative, 1% positive)?",
+            "opts": ["Overall Accuracy", "Precision, Recall, and Area Under ROC Curve (AUC-ROC)", "Mean Squared Error (MSE)", "R-Squared"],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "In modern AI systems, what is the primary role of Vector Embeddings and Vector Databases (e.g. Pinecone, ChromaDB)?",
+            "opts": [
+                "To compress image files into ZIP archives.",
+                "To represent semantic textual/multimodal data as high-dimensional numerical vectors for fast cosine similarity search (RAG).",
+                "To generate relational SQL table schemas.",
+                "To execute frontend JavaScript code."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "In PyTorch deep learning, why is `optimizer.zero_grad()` called before executing `loss.backward()` during training loops?",
+            "opts": [
+                "To reset model weights to zero.",
+                "To clear accumulated gradients from previous iterations so gradients do not sum up across batches.",
+                "To free GPU memory allocations.",
+                "To shuffle dataset rows."
+            ],
+            "ans": "B",
+            "diff": "Hard"
+        },
+        {
+            "text": "What is the primary function of Softmax activation in multi-class neural network output layers?",
+            "opts": [
+                "To set negative numbers to zero.",
+                "To convert raw logit outputs into a probability distribution summing to 1.0.",
+                "To calculate matrix multiplication.",
+                "To perform feature scaling."
+            ],
+            "ans": "B",
+            "diff": "Easy"
+        }
+    ],
+    "api": [
+        {
+            "text": "In RESTful API design, which HTTP method is Idempotent, meaning multiple identical requests produce the exact same server state?",
+            "opts": ["POST", "PUT", "PATCH (non-standard)", "None of the above"],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "How does JSON Web Token (JWT) stateless authentication verify user identity on backend services?",
+            "opts": [
+                "By looking up session files on the server hard drive.",
+                "By cryptographically verifying the HMAC/RSA signature header of the bearer token sent in incoming authorization headers.",
+                "By checking the client IP address in a database table.",
+                "By storing user passwords in cookies."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "Which HTTP status code indicates that a request was successfully processed, but the response body is intentionally empty (e.g., DELETE confirmation)?",
+            "opts": ["200 OK", "201 Created", "204 No Content", "400 Bad Request"],
+            "ans": "C",
+            "diff": "Easy"
+        },
+        {
+            "text": "How does the Sliding Window Rate Limiting algorithm protect backend REST APIs from DDoS attacks?",
+            "opts": [
+                "By blocking all traffic from external countries.",
+                "By tracking request timestamps per client IP/user ID in a rolling time window and rejecting requests exceeding configured limits.",
+                "By restarting backend servers every 10 minutes.",
+                "By minifying JSON responses."
+            ],
+            "ans": "B",
+            "diff": "Hard"
+        },
+        {
+            "text": "What is the primary benefit of generating OpenAPI (Swagger) specifications for backend web services?",
+            "opts": [
+                "It automatically compiles Python into JavaScript.",
+                "It provides interactive, standardized API documentation and allows client SDK generation across programming languages.",
+                "It encrypts database connections.",
+                "It speeds up SQL queries."
+            ],
+            "ans": "B",
+            "diff": "Easy"
+        }
+    ],
+    "system_design": [
+        {
+            "text": "How does the Circuit Breaker pattern enhance fault tolerance in a distributed microservices network?",
+            "opts": [
+                "By re-routing all network traffic to local storage.",
+                "By monitoring downstream failure rates, tripping to Open state upon breach, and failing fast to prevent cascading outages.",
+                "By automatically restarting CPU hardware.",
+                "By minifying client-side JavaScript bundles."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "In Redis caching strategies, what does the `volatile-lru` eviction policy do when maximum memory limit is reached?",
+            "opts": [
+                "It deletes all cached keys indiscriminately.",
+                "It evicts the least recently used keys among those with an explicit expiration (TTL) set.",
+                "It throws a fatal server crash exception.",
+                "It flushes the database disk logs."
+            ],
+            "ans": "B",
+            "diff": "Hard"
+        },
+        {
+            "text": "According to the CAP Theorem in distributed databases, what tradeoff must a system make during a network partition (P)?",
+            "opts": [
+                "Choose between Consistency (C) and Availability (A).",
+                "Choose between CPU speed and Memory storage.",
+                "Choose between SQL and NoSQL.",
+                "Choose between IPv4 and IPv6."
+            ],
+            "ans": "A",
+            "diff": "Medium"
+        },
+        {
+            "text": "Why are asynchronous message queues (e.g. RabbitMQ, Apache Kafka) used between microservices?",
+            "opts": [
+                "To make all API calls synchronous.",
+                "To decouple producer and consumer services, absorb traffic surges, and ensure reliable eventual consistency.",
+                "To style user interfaces.",
+                "To replace database indexes."
+            ],
+            "ans": "B",
+            "diff": "Medium"
+        },
+        {
+            "text": "How does Consistent Hashing minimize key redistribution when scaling a distributed caching cluster horizontally?",
+            "opts": [
+                "By hashing keys into a virtual ring structure where adding/removing a node only re-maps 1/N keys on average.",
+                "By hashing all keys to a single master node.",
+                "By deleting all cached keys on cluster expansion.",
+                "By converting keys into plain text."
+            ],
+            "ans": "A",
             "diff": "Hard"
         }
     ]
+}
 
-    random.shuffle(q_pool)
+def generate_ai_test_questions(target_job: str, ongoing_module: Optional[str] = None) -> List[Dict[str, Any]]:
+    """AI Engine dynamically synthesizes test questions based on the candidate's PRESENT ONGOING ROADMAP MODULE."""
+    module_name = ongoing_module or "REST API & Architecture"
+    cat = get_module_category(module_name)
     
+    if cat in MODULE_MCQ_BANK:
+        raw_pool = MODULE_MCQ_BANK[cat]
+    else:
+        raw_pool = [
+            {
+                "text": f"In {module_name}, what is the primary role of request payload validation and data type enforcement?",
+                "opts": ["To render CSS styles", "To validate incoming request payloads before business logic execution and prevent malformed data errors", "To compile bytecode", "To format HTML"],
+                "ans": "B", "diff": "Easy"
+            },
+            {
+                "text": f"When implementing {module_name}, which HTTP status code confirms that a new resource instance was successfully created?",
+                "opts": ["200 OK", "201 Created", "404 Not Found", "500 Internal Error"],
+                "ans": "B", "diff": "Easy"
+            },
+            {
+                "text": f"In production {module_name} systems, how does database connection pooling optimize throughput under concurrent user load?",
+                "opts": ["By deleting old database tables", "By reusing established database TCP sockets to eliminate connection setup overhead latency", "By converting SQL queries to JSON", "By styling forms"],
+                "ans": "B", "diff": "Medium"
+            },
+            {
+                "text": f"How does B-Tree indexing on frequently filtered WHERE and JOIN columns improve performance in {module_name} datastores?",
+                "opts": ["By compressing storage", "By reducing disk I/O scans and executing fast logarithmic index lookups", "By encrypting keys", "By replacing SQL queries"],
+                "ans": "B", "diff": "Medium"
+            },
+            {
+                "text": f"In high-scale {module_name} architectures, how does distributed Redis caching mitigate database Thundering Herd crashes?",
+                "opts": ["By running background log deletion", "By serving warm cached data with mutex locks and TTL stale-while-revalidate shielding the database", "By deleting user accounts", "By compiling to assembly"],
+                "ans": "B", "diff": "Hard"
+            }
+        ]
+
     res = []
-    for idx, item in enumerate(q_pool[:5]):
+    for idx, item in enumerate(raw_pool[:5]):
         res.append({
             "id": idx + 1,
             "target_job": target_job,
@@ -509,7 +941,7 @@ def generate_ai_test_questions(target_job: str, ongoing_module: Optional[str] = 
             "option_c": item["opts"][2],
             "option_d": item["opts"][3],
             "correct_option": item["ans"],
-            "category": item["cat"],
+            "category": module_name,
             "difficulty": item["diff"]
         })
     return res
