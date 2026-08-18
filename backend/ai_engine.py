@@ -2,6 +2,7 @@ import re
 import json
 import random
 from typing import List, Dict, Any, Tuple, Optional
+from datetime import datetime
 
 # Predefined skill database with market trends
 SKILL_CATALOG = {
