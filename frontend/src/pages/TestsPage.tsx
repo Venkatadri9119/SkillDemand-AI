@@ -135,7 +135,7 @@ export const TestsPage: React.FC = () => {
   const fetchPrepQuestions = async () => {
     setPrepLoading(true);
     try {
-      const res = await api.getProgressivePrepQuestions();
+      const res = await api.getProgressivePrepQuestions(undefined, moduleParam || undefined);
       setPrepStages(res);
     } catch (err) {
       console.error(err);
@@ -158,7 +158,7 @@ export const TestsPage: React.FC = () => {
 
   const fetchInterviewQuestions = async () => {
     try {
-      const res = await api.getInterviewQuestions();
+      const res = await api.getInterviewQuestions(undefined, moduleParam || undefined);
       setInterviewQuestions(res);
     } catch (err) {
       setInterviewQuestions([

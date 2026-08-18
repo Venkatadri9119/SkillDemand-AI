@@ -516,10 +516,11 @@ def get_test_history(current_user: models.User = Depends(get_current_user), db: 
 @router.get("/tests/progressive-prep")
 def get_progressive_prep_questions(
     target_job: Optional[str] = None,
+    module_name: Optional[str] = None,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Generates preparation questions organized into Stage 1 (Simple), Stage 2 (Medium), and Stage 3 (High)."""
+    """Generates preparation questions organized into Stage 1 (Simple), Stage 2 (Medium), and Stage 3 (High) based on target_job & roadmap module."""
     if not target_job:
         target_job_obj = db.query(models.UserTargetJob).filter(
             models.UserTargetJob.user_id == current_user.id,
@@ -527,10 +528,28 @@ def get_progressive_prep_questions(
         ).first()
         target_job = target_job_obj.job_title if target_job_obj else "Python Developer"
         
-    user_skills = [{"skill_name": s.skill_name, "proficiency": s.proficiency} for s in current_user.skills]
-    gap = ai_engine.analyze_skill_gap(user_skills, target_job)
+    if not module_name:
+        user_skills = [{"skill_name": s.skill_name, "proficiency": s.proficiency} for s in current_user.skills]
+        gap = ai_engine.analyze_skill_gap(user_skills, target_job)
+        test_results = db.query(models.TestResult).filter(models.TestResult.user_id == current_user.id).all()
+        completed_skills = set()
+        for tr in test_results:
+            if tr.strong_skills_json:
+                try:
+                    completed_skills.update(json.loads(tr.strong_skills_json))
+                except Exception:
+                    pass
 
-    return ai_engine.generate_progressive_preparation_questions(target_job=target_job)
+        roadmap_steps = ai_engine.generate_reskilling_roadmap(
+            target_job=target_job,
+            missing_skills=gap["missing_skills"],
+            strong_skills=gap["strong_skills"],
+            completed_test_skills=list(completed_skills)
+        )
+        ongoing = next((st["skill"] for st in roadmap_steps if st.get("status") == "In Progress"), None)
+        module_name = ongoing or "REST API & Architecture"
+
+    return ai_engine.generate_progressive_preparation_questions(target_job=target_job, module_name=module_name)
 
 @router.get("/tests/questions", response_model=List[schemas.QuestionDTO])
 def get_test_questions(
@@ -569,21 +588,21 @@ def get_test_questions(
             completed_test_skills=list(completed_skills)
         )
         
-        ongoing_step = next((step for step in roadmap_steps if step.get("status") == "In Progress"), None)
-        module_name = ongoing_step["skill"] if ongoing_step else "REST API Architecture"
+        ongoing = next((st["skill"] for st in roadmap_steps if st.get("status") == "In Progress"), None)
+        module_name = ongoing or "REST API & Architecture"
 
     # AI Engine generated test questions targeting candidate's SPECIFIC ROADMAP MODULE
-    questions = ai_engine.generate_ai_test_questions(target_job=target_job, ongoing_module=module_name)
-    return questions
+    return ai_engine.generate_ai_test_questions(target_job=target_job, ongoing_module=module_name)
 
 # --- AI MOCK INTERVIEW QUESTIONS ---
 @router.get("/interview/questions")
 def get_ai_interview_questions(
     target_job: Optional[str] = None,
+    module_name: Optional[str] = None,
     current_user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Fetches AI Engine generated interview questions progressing Easy -> Medium -> Hard."""
+    """Fetches AI Engine generated interview questions progressing Easy -> Medium -> Hard based on target_job & roadmap module."""
     if not target_job:
         target_job_obj = db.query(models.UserTargetJob).filter(
             models.UserTargetJob.user_id == current_user.id,
@@ -591,7 +610,28 @@ def get_ai_interview_questions(
         ).first()
         target_job = target_job_obj.job_title if target_job_obj else "Python Developer"
 
-    return ai_engine.generate_ai_interview_questions(target_job=target_job)
+    if not module_name:
+        user_skills = [{"skill_name": s.skill_name, "proficiency": s.proficiency} for s in current_user.skills]
+        gap = ai_engine.analyze_skill_gap(user_skills, target_job)
+        test_results = db.query(models.TestResult).filter(models.TestResult.user_id == current_user.id).all()
+        completed_skills = set()
+        for tr in test_results:
+            if tr.strong_skills_json:
+                try:
+                    completed_skills.update(json.loads(tr.strong_skills_json))
+                except Exception:
+                    pass
+
+        roadmap_steps = ai_engine.generate_reskilling_roadmap(
+            target_job=target_job,
+            missing_skills=gap["missing_skills"],
+            strong_skills=gap["strong_skills"],
+            completed_test_skills=list(completed_skills)
+        )
+        ongoing = next((st["skill"] for st in roadmap_steps if st.get("status") == "In Progress"), None)
+        module_name = ongoing or "REST API & Architecture"
+
+    return ai_engine.generate_ai_interview_questions(target_job=target_job, module_name=module_name)
 
 @router.post("/interview/message", response_model=schemas.InterviewFeedbackResponse)
 def evaluate_interview_step(

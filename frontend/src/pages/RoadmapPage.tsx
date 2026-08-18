@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, Clock, ExternalLink, ArrowRight, RefreshCw, Flame, Code, BookOpen, Bot, Zap, Target, CheckCircle } from 'lucide-react';
+import { Sparkles, Clock, ExternalLink, ArrowRight, RefreshCw, Flame, Code, BookOpen, Bot, Zap, Target, CheckCircle, Layers, Video, TrendingUp } from 'lucide-react';
 import { api } from '../services/api';
 import { RoadmapStep } from '../types';
 
@@ -275,17 +275,34 @@ export const RoadmapPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="mt-4 pt-3 border-t border-slate-800/80 flex justify-between items-center text-xs">
-                    <span className="text-slate-500 font-medium">Demand Trend: {step.demand_trend}</span>
-                    <button
-                      onClick={() => navigate(`/tests?tab=test&module=${encodeURIComponent(step.skill)}`)}
-                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all"
-                    >
-                      <BookOpen className="w-3.5 h-3.5 text-white" />
-                      <span>Take Skill Test</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
+                  {/* Actions for this Roadmap Module */}
+                  <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <span className="text-slate-400 font-medium flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Market Demand: <strong className="text-white">{step.demand_trend}</strong>
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => navigate(`/tests?tab=prep&module=${encodeURIComponent(step.skill)}`)}
+                        className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold rounded-xl inline-flex items-center gap-1.5 transition-all"
+                      >
+                        <Layers className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Practice Questions</span>
+                      </button>
+                      <button
+                        onClick={() => navigate(`/tests?tab=test&module=${encodeURIComponent(step.skill)}`)}
+                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-indigo-200" />
+                        <span>Module Skill Test</span>
+                      </button>
+                      <button
+                        onClick={() => navigate(`/tests?tab=interview&module=${encodeURIComponent(step.skill)}`)}
+                        className="px-3 py-1.5 bg-purple-600/20 border border-purple-500/40 hover:bg-purple-600 text-purple-300 hover:text-white font-semibold rounded-xl inline-flex items-center gap-1.5 transition-all"
+                      >
+                        <Video className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Mock Interview</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

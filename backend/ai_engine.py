@@ -514,73 +514,75 @@ def generate_ai_test_questions(target_job: str, ongoing_module: Optional[str] = 
         })
     return res
 
-def generate_ai_interview_questions(target_job: str) -> List[Dict[str, Any]]:
-    """AI Engine interview question generator dynamically customized for target_job."""
+def generate_ai_interview_questions(target_job: str, module_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    """AI Engine interview question generator dynamically customized for target_job & roadmap module."""
+    mod = module_name or "REST API & Architecture"
     
     q1_pool = [
-        f"Introduce your professional background as a {target_job} and explain core architectural principles you follow when starting a project.",
-        f"What architectural pattern do you follow for structuring a maintainable {target_job} codebase?"
+        f"Introduce your professional background as a {target_job} and explain core architectural principles you follow when starting a project in {mod}.",
+        f"What architectural pattern do you follow for structuring a maintainable {target_job} codebase handling {mod}?"
     ]
     q2_pool = [
-        f"How would you design a high-throughput, secure REST API for a {target_job} application with proper rate limiting and payload validation?",
-        f"In {target_job} engineering, how do you handle API versioning and backward compatibility for breaking schema changes?"
+        f"How would you design a high-throughput, secure system for {mod} in a {target_job} role with proper rate limiting and payload validation?",
+        f"In {target_job} engineering for {mod}, how do you handle API versioning and backward compatibility for breaking schema changes?"
     ]
     q3_pool = [
-        f"Describe how you optimize slow SQL queries, design indexing strategies, and ensure ACID transaction integrity for a {target_job} database under heavy concurrency.",
-        f"How do you handle database migration rollbacks and data consistency across distributed database replicas in {target_job} backends?"
+        f"Describe how you optimize slow queries, design indexing strategies, and ensure transaction integrity for {mod} in a {target_job} system under heavy concurrency.",
+        f"How do you handle database migration rollbacks and data consistency across distributed replicas for {mod} in {target_job} backends?"
     ]
     q4_pool = [
-        f"Explain how you architect resilient {target_job} microservices using Docker, Redis caching, and Circuit Breaker patterns to survive traffic spikes.",
-        f"Describe a high-priority production outage or bottleneck you experienced in a {target_job} system and how you diagnosed and fixed it."
+        f"Explain how you architect resilient {target_job} microservices for {mod} using Docker, Redis caching, and Circuit Breaker patterns to survive traffic spikes.",
+        f"Describe a high-priority production outage or bottleneck you experienced in a {target_job} system for {mod} and how you diagnosed and fixed it."
     ]
 
     return [
-        {"index": 0, "difficulty": "Easy", "difficulty_label": "Level 1: Fundamentals", "question": random.choice(q1_pool)},
-        {"index": 1, "difficulty": "Medium", "difficulty_label": "Level 2: API & Engineering", "question": random.choice(q2_pool)},
-        {"index": 2, "difficulty": "Medium", "difficulty_label": "Level 3: Database & Performance", "question": random.choice(q3_pool)},
-        {"index": 3, "difficulty": "Hard", "difficulty_label": "Level 4: System Design & Resilience", "question": random.choice(q4_pool)}
+        {"index": 0, "difficulty": "Easy", "difficulty_label": f"Level 1: {mod} Fundamentals", "question": random.choice(q1_pool)},
+        {"index": 1, "difficulty": "Medium", "difficulty_label": f"Level 2: {mod} Engineering", "question": random.choice(q2_pool)},
+        {"index": 2, "difficulty": "Medium", "difficulty_label": f"Level 3: {mod} Performance", "question": random.choice(q3_pool)},
+        {"index": 3, "difficulty": "Hard", "difficulty_label": f"Level 4: {mod} Resilience", "question": random.choice(q4_pool)}
     ]
 
-def generate_progressive_preparation_questions(target_job: str) -> List[Dict[str, Any]]:
-    """Generates stage-by-stage technical preparation questions dynamically randomized on every call."""
+def generate_progressive_preparation_questions(target_job: str, module_name: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Generates stage-by-stage technical preparation questions dynamically randomized and focused on target_job & roadmap module."""
+    mod = module_name or "REST API & Architecture"
     
     s1_pool = [
         {
             "id": 101, "stage": 1, "difficulty": "Simple",
-            "question_text": f"In {target_job} development, what is the primary difference between a list/array and a set data structure?",
-            "options": ["Lists allow duplicate items and maintain insertion order, while Sets store unique items without duplicates.", "Sets are indexed by integers, while lists are indexed by strings.", "Lists cannot be iterated over, while Sets can.", "There is no difference."],
-            "correct_index": 0, "ai_explanation": "Lists preserve insertion order and allow duplicates. Sets automatically enforce uniqueness."
+            "question_text": f"In {target_job} development for {mod}, what is the primary role of data validation and type enforcement?",
+            "options": ["To validate incoming request payloads before business logic execution and prevent malformed data errors", "To render CSS styles", "To compile bytecode", "To format HTML"],
+            "correct_index": 0, "ai_explanation": f"Data type enforcement in {mod} guarantees that incoming data conforms to valid schemas."
         },
         {
             "id": 102, "stage": 1, "difficulty": "Simple",
-            "question_text": "Which HTTP status code signifies that a client request was successfully created on a server?",
+            "question_text": f"When building {mod} for a {target_job}, which HTTP status code confirms successful creation of a new resource?",
             "options": ["200 OK", "201 Created", "404 Not Found", "500 Internal Error"],
             "correct_index": 1, "ai_explanation": "HTTP 201 Created explicitly confirms a new resource was created successfully."
         },
         {
             "id": 103, "stage": 1, "difficulty": "Simple",
-            "question_text": f"What is the primary benefit of modular code organization in {target_job} projects?",
+            "question_text": f"What is the primary benefit of modular code organization when building {mod} for {target_job} projects?",
             "options": ["Faster CPU speed", "Improved readability, reusability, and maintainability across components", "Decreased disk space", "Automatic deployment"],
-            "correct_index": 1, "ai_explanation": "Modular architecture decouples functionality into independent re-usable modules."
+            "correct_index": 1, "ai_explanation": f"Modular architecture decouples {mod} functionality into independent re-usable modules."
         }
     ]
 
     s2_pool = [
         {
             "id": 201, "stage": 2, "difficulty": "Medium",
-            "question_text": f"When designing a production REST API for a {target_job}, why is ORM connection pooling essential?",
+            "question_text": f"When designing a production {mod} system for a {target_job}, why is database connection pooling essential?",
             "options": ["It encrypts all database passwords automatically.", "It reuses pre-established database TCP connections to eliminate connection overhead latency under load.", "It replaces the need for SQL database tables.", "It automatically generates frontend CSS code."],
-            "correct_index": 1, "ai_explanation": "Connection pooling reuses database connections to prevent TCP handshake overhead per request."
+            "correct_index": 1, "ai_explanation": f"Connection pooling reuses open database TCP sockets, preventing handshake overhead per request in {mod}."
         },
         {
             "id": 202, "stage": 2, "difficulty": "Medium",
-            "question_text": "In relational databases like PostgreSQL, when should a B-Tree index be applied?",
+            "question_text": f"In relational database instances supporting {mod} in {target_job} backends, when should a B-Tree index be applied?",
             "options": ["On every single column in every table.", "On frequently queried WHERE, JOIN, and ORDER BY columns to accelerate lookups.", "Only on JSON text blob columns.", "Indexes should never be used in relational databases."],
-            "correct_index": 1, "ai_explanation": "B-Tree indexes speed up equality and range queries on filtered or joined columns."
+            "correct_index": 1, "ai_explanation": f"B-Tree indexes speed up equality and range queries on filtered or joined columns for {mod}."
         },
         {
             "id": 203, "stage": 2, "difficulty": "Medium",
-            "question_text": f"In {target_job} web applications, why are CORS headers configured on backend servers?",
+            "question_text": f"In {target_job} applications handling {mod}, why are CORS headers configured on backend servers?",
             "options": ["To compress video files", "To specify which trusted client origins are authorized to make cross-domain API calls", "To generate database keys", "To compile TypeScript"],
             "correct_index": 1, "ai_explanation": "CORS headers control browser security policies for cross-origin API requests."
         }
@@ -589,15 +591,15 @@ def generate_progressive_preparation_questions(target_job: str) -> List[Dict[str
     s3_pool = [
         {
             "id": 301, "stage": 3, "difficulty": "High",
-            "question_text": f"For high-throughput {target_job} backend microservices, how does distributed Redis caching mitigate database Thundering Herd problems?",
+            "question_text": f"For high-throughput {target_job} microservices handling {mod}, how does distributed Redis caching mitigate database Thundering Herd problems?",
             "options": ["By running background cron jobs to delete old records.", "By serving warm cached data with mutex locks / TTL stale-while-revalidate to shield database from spike traffic.", "By converting SQL queries into raw binary files.", "By replacing Docker containers."],
-            "correct_index": 1, "ai_explanation": "Redis warm caching absorbs traffic spikes and prevents all concurrent clients from hitting the database simultaneously."
+            "correct_index": 1, "ai_explanation": f"Redis warm caching absorbs traffic spikes and prevents all concurrent clients from hitting the database simultaneously in {mod}."
         },
         {
             "id": 302, "stage": 3, "difficulty": "High",
-            "question_text": "What design pattern prevents a failing downstream microservice from cascading failures to upstream API gateways?",
+            "question_text": f"What design pattern prevents a failing downstream {mod} microservice from cascading failures in a {target_job} system?",
             "options": ["Circuit Breaker Pattern", "Singleton Pattern", "Factory Pattern", "Decorator Pattern"],
-            "correct_index": 0, "ai_explanation": "The Circuit Breaker pattern trips upon repeated downstream failures to fail fast and protect system resources."
+            "correct_index": 0, "ai_explanation": f"The Circuit Breaker pattern trips upon repeated downstream failures to fail fast and protect system resources in {mod}."
         }
     ]
 
@@ -608,21 +610,21 @@ def generate_progressive_preparation_questions(target_job: str) -> List[Dict[str
     return [
         {
             "stage": 1,
-            "title": "Stage 1: Foundational Syntax & Core Concepts",
+            "title": f"Stage 1: {mod} Fundamentals",
             "difficulty_label": "Simple",
             "badge_color": "emerald",
             "questions": s1_pool[:2]
         },
         {
             "stage": 2,
-            "title": "Stage 2: Applied Engineering & Data Pipelines",
+            "title": f"Stage 2: Applied {mod} Engineering",
             "difficulty_label": "Medium",
             "badge_color": "amber",
             "questions": s2_pool[:2]
         },
         {
             "stage": 3,
-            "title": "Stage 3: Advanced High-Scale System Design",
+            "title": f"Stage 3: Advanced {mod} System Design",
             "difficulty_label": "High / Advanced",
             "badge_color": "rose",
             "questions": s3_pool[:2]

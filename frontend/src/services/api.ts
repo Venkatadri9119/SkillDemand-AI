@@ -100,11 +100,19 @@ export const api = {
       }`
     ),
 
-  getProgressivePrepQuestions: (target_job?: string) =>
-    request<any[]>(`/tests/progressive-prep${target_job ? `?target_job=${encodeURIComponent(target_job)}` : ''}`),
+  getProgressivePrepQuestions: (target_job?: string, module_name?: string) =>
+    request<any[]>(
+      `/tests/progressive-prep?${target_job ? `target_job=${encodeURIComponent(target_job)}&` : ''}${
+        module_name ? `module_name=${encodeURIComponent(module_name)}` : ''
+      }`
+    ),
 
-  getInterviewQuestions: (target_job?: string) =>
-    request<any[]>(`/interview/questions${target_job ? `?target_job=${encodeURIComponent(target_job)}` : ''}`),
+  getInterviewQuestions: (target_job?: string, module_name?: string) =>
+    request<any[]>(
+      `/interview/questions?${target_job ? `target_job=${encodeURIComponent(target_job)}&` : ''}${
+        module_name ? `module_name=${encodeURIComponent(module_name)}` : ''
+      }`
+    ),
   submitTest: (target_job: string, answers: Record<number, string>) =>
     request<TestResult>('/tests/submit', { method: 'POST', body: JSON.stringify({ target_job, answers }) }),
   getTestHistory: () => request<any[]>('/tests/history'),
