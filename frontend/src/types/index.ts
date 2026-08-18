@@ -106,11 +106,14 @@ export interface RoadmapStep {
   skill: string;
   status: 'Completed' | 'In Progress' | 'Pending';
   estimated_time: string;
-  priority: 'High' | 'Medium' | 'Low' | 'Normal';
+  priority: 'High' | 'Medium' | 'Low' | 'Normal' | 'Verified' | 'Critical';
   demand_trend: string;
   why_it_matters: string;
   resource_link: string;
   practice_project: string;
+  key_concepts?: string[];
+  learning_guide?: string;
+  official_docs_url?: string;
 }
 
 export interface Job {

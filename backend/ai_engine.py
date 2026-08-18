@@ -394,6 +394,107 @@ def analyze_skill_gap(user_skills: List[Dict[str, str]], target_job: str) -> Dic
         "explanation": explanation
     }
 
+MODULE_STUDY_BANK = {
+    "python": {
+        "concepts": [
+            "Data types, List Comprehensions & Generator Expressions",
+            "Object-Oriented Programming (OOP) & __slots__ memory optimization",
+            "Decorator function design patterns & Context Managers",
+            "Asynchronous programming with asyncio, async/await, and event loops",
+            "Packaging, PyPI, virtual environments, and unit testing with pytest"
+        ],
+        "guide": "Master core Python language mechanics, asynchronous non-blocking I/O, object-oriented design patterns, and efficient memory management techniques essential for high-performance backends.",
+        "docs": "https://docs.python.org/3/"
+    },
+    "docker": {
+        "concepts": [
+            "Container isolation vs Virtual Machine hypervisors",
+            "Writing production Dockerfiles with multi-stage build optimization",
+            "Docker Compose multi-container application orchestration",
+            "Data persistence using Docker Volumes and bind mounts",
+            "Container security, non-root user execution, and layer caching"
+        ],
+        "guide": "Learn containerization fundamentals to package application code with dependencies into lightweight, immutable container images ready for production deployment.",
+        "docs": "https://docs.docker.com/"
+    },
+    "sql": {
+        "concepts": [
+            "Advanced relational joins (INNER, LEFT, RIGHT, FULL OUTER, CROSS)",
+            "ACID transaction management and isolation levels (READ COMMITTED, SERIALIZABLE)",
+            "B-Tree index structure, composite indexes, and query EXPLAIN ANALYZE execution plans",
+            "Database connection pooling and connection lifetime tuning",
+            "Parameterized queries for SQL Injection vulnerability prevention"
+        ],
+        "guide": "Gain mastery in relational query design, index tuning, transaction locks, and database connection architecture under high concurrent query volume.",
+        "docs": "https://www.postgresql.org/docs/"
+    },
+    "api": {
+        "concepts": [
+            "REST architectural constraints & HTTP method idempotence (GET, POST, PUT, DELETE)",
+            "Stateless authentication using JWT (JSON Web Tokens) with HMAC/RSA signing",
+            "Payload schema validation and serialization using Pydantic / OpenAPI",
+            "API rate limiting, CORS browser security policies, and error handling",
+            "Automated API documentation generation with Swagger / ReDoc"
+        ],
+        "guide": "Architect high-throughput, secure RESTful microservices with strict schema validation, stateless JWT authentication, and interactive API documentation.",
+        "docs": "https://fastapi.tiangolo.com/"
+    },
+    "aws": {
+        "concepts": [
+            "Amazon EC2 compute instances & Security Group network firewalls",
+            "IAM Users, Roles, and least-privilege security policies",
+            "Amazon S3 scalable object storage & bucket security policies",
+            "Auto Scaling Groups (ASG) combined with Application Load Balancers (ALB)",
+            "Infrastructure as Code (IaC) provisioning using Terraform or CloudFormation"
+        ],
+        "guide": "Architect secure, fault-tolerant, and auto-scaling cloud infrastructure on Amazon Web Services utilizing industry best practices for high availability.",
+        "docs": "https://aws.amazon.com/documentation/"
+    },
+    "react": {
+        "concepts": [
+            "Component lifecycle, props, and state immutability rules",
+            "Hooks in depth: useEffect, useCallback, useMemo, and useRef",
+            "Virtual DOM reconciliation and key prop diffing optimization",
+            "Global state management patterns (Context API, Redux Toolkit)",
+            "Client-side routing, code splitting, and lazy loading"
+        ],
+        "guide": "Build dynamic, responsive single-page web applications with React, leveraging modern hooks, Virtual DOM diffing, and performance optimization techniques.",
+        "docs": "https://react.dev/"
+    },
+    "ml": {
+        "concepts": [
+            "Supervised vs Unsupervised learning model architectures",
+            "Overfitting & Underfitting mitigation (L1/L2 Regularization, Dropout, Cross-Validation)",
+            "Feature scaling, encoding, and data preprocessing pipelines with Pandas/NumPy",
+            "Model evaluation metrics: Precision, Recall, F1-Score, and ROC-AUC",
+            "Vector Embeddings & Cosine Similarity search with Vector Databases"
+        ],
+        "guide": "Understand end-to-end machine learning workflows, data preprocessing, model selection, evaluation metrics, and vector embedding integration for modern AI applications.",
+        "docs": "https://scikit-learn.org/stable/"
+    }
+}
+
+def get_module_study_details(skill_name: str, target_job: str) -> Dict[str, Any]:
+    cat = get_module_category(skill_name)
+    if cat in MODULE_STUDY_BANK:
+        b = MODULE_STUDY_BANK[cat]
+        return {
+            "key_concepts": b["concepts"],
+            "learning_guide": b["guide"],
+            "official_docs_url": b["docs"]
+        }
+    else:
+        return {
+            "key_concepts": [
+                f"{skill_name} core architecture & execution fundamentals",
+                f"Implementing {skill_name} in production {target_job} projects",
+                f"Performance tuning, caching, and error handling for {skill_name}",
+                f"Automated testing and continuous integration for {skill_name}"
+            ],
+            "learning_guide": f"Master practical engineering application of {skill_name} to build production-grade, maintainable software systems for {target_job} roles.",
+            "official_docs_url": f"https://coursera.org/search?query={skill_name}"
+        }
+
 def generate_reskilling_roadmap(target_job: str, missing_skills: List[str], strong_skills: List[str], completed_test_skills: Optional[List[str]] = None) -> List[Dict[str, Any]]:
     """Generates visual reskilling roadmap timeline tracking test module completions."""
     steps = []
@@ -402,6 +503,7 @@ def generate_reskilling_roadmap(target_job: str, missing_skills: List[str], stro
     # 1. Baseline strong skills + test-verified mastered skills
     combined_completed = list(set(strong_skills + list(completed_set)))
     for sk in combined_completed:
+        study = get_module_study_details(sk, target_job)
         steps.append({
             "skill": sk,
             "status": "Completed",
@@ -409,8 +511,11 @@ def generate_reskilling_roadmap(target_job: str, missing_skills: List[str], stro
             "priority": "Verified",
             "demand_trend": SKILL_CATALOG.get(sk, {}).get("trend", "High → Very High"),
             "why_it_matters": f"Core prerequisite for {target_job} verified through assessment tests.",
-            "resource_link": "https://docs.python.org",
-            "practice_project": f"Production pipeline utilizing {sk}"
+            "resource_link": study["official_docs_url"],
+            "practice_project": f"Production pipeline utilizing {sk}",
+            "key_concepts": study["key_concepts"],
+            "learning_guide": study["learning_guide"],
+            "official_docs_url": study["official_docs_url"]
         })
         
     # 2. Missing & Roadmap Gap skills
@@ -423,6 +528,7 @@ def generate_reskilling_roadmap(target_job: str, missing_skills: List[str], stro
     for i, sk in enumerate(active_pool):
         time_est = f"{i+1} Week" if i == 0 else f"{i+1} Weeks"
         prio = "High" if i == 0 else ("Medium" if i == 1 else "Normal")
+        study = get_module_study_details(sk, target_job)
         
         steps.append({
             "skill": sk,
@@ -431,11 +537,15 @@ def generate_reskilling_roadmap(target_job: str, missing_skills: List[str], stro
             "priority": prio,
             "demand_trend": SKILL_CATALOG.get(sk, {}).get("trend", "High → Very High"),
             "why_it_matters": f"Target roadmap module required for {target_job} competency.",
-            "resource_link": f"https://coursera.org/search?query={sk}",
-            "practice_project": f"Module practice project: {sk}"
+            "resource_link": study["official_docs_url"],
+            "practice_project": f"Module practice project: {sk}",
+            "key_concepts": study["key_concepts"],
+            "learning_guide": study["learning_guide"],
+            "official_docs_url": study["official_docs_url"]
         })
         
     # Final Capstone milestone
+    capstone_study = get_module_study_details(f"{target_job} Capstone", target_job)
     steps.append({
         "skill": "Production Capstone System",
         "status": "Completed" if len(active_pool) == 0 else "Pending",
@@ -444,7 +554,15 @@ def generate_reskilling_roadmap(target_job: str, missing_skills: List[str], stro
         "demand_trend": "Critical",
         "why_it_matters": "Demonstrates end-to-end domain mastery to employers.",
         "resource_link": "https://github.com/topics/fullstack",
-        "practice_project": f"End-to-end portfolio architecture for {target_job}"
+        "practice_project": f"End-to-end portfolio architecture for {target_job}",
+        "key_concepts": [
+            f"End-to-end fullstack architecture for {target_job}",
+            "CI/CD deployment automation & cloud hosting",
+            "Database schema migrations & connection pooling",
+            "System monitoring, logging, and security auditing"
+        ],
+        "learning_guide": f"Integrate all reskilling modules into a production-ready capstone project showcasing full domain competence for {target_job}.",
+        "official_docs_url": "https://github.com/topics/fullstack"
     })
     
     return steps
@@ -1236,6 +1354,7 @@ def generate_ai_agent_personalized_roadmap(
     steps = []
     
     for sk in strong:
+        study = get_module_study_details(sk, role_title)
         steps.append({
             "skill": sk,
             "status": "Completed",
@@ -1243,14 +1362,18 @@ def generate_ai_agent_personalized_roadmap(
             "priority": "Verified",
             "demand_trend": SKILL_CATALOG.get(sk, {}).get("trend", "High → Very High"),
             "why_it_matters": f"Core verified foundation for {role_title} role.",
-            "resource_link": f"https://coursera.org/search?query={sk}",
-            "practice_project": f"Production service module built with {sk}"
+            "resource_link": study["official_docs_url"],
+            "practice_project": f"Production service module built with {sk}",
+            "key_concepts": study["key_concepts"],
+            "learning_guide": study["learning_guide"],
+            "official_docs_url": study["official_docs_url"]
         })
         
     for i, sk in enumerate(missing):
         is_first = (i == 0)
         time_est = f"{i+1}-2 Weeks"
         prio = "Critical" if i == 0 else ("High" if i == 1 else "Medium")
+        study = get_module_study_details(sk, role_title)
         
         steps.append({
             "skill": sk,
@@ -1259,8 +1382,11 @@ def generate_ai_agent_personalized_roadmap(
             "priority": prio,
             "demand_trend": SKILL_CATALOG.get(sk, {}).get("trend", "High → Very High"),
             "why_it_matters": f"Essential skill gap required to achieve top readiness for {role_title}.",
-            "resource_link": f"https://coursera.org/search?query={sk}",
-            "practice_project": f"{sk} hands-on implementation project for {role_title}"
+            "resource_link": study["official_docs_url"],
+            "practice_project": f"{sk} hands-on implementation project for {role_title}",
+            "key_concepts": study["key_concepts"],
+            "learning_guide": study["learning_guide"],
+            "official_docs_url": study["official_docs_url"]
         })
         
     steps.append({
@@ -1271,7 +1397,15 @@ def generate_ai_agent_personalized_roadmap(
         "demand_trend": "High Demand",
         "why_it_matters": f"Comprehensive real-world capstone project showcasing full {role_title} expertise.",
         "resource_link": "https://github.com/topics/fullstack",
-        "practice_project": f"Full-stack production deployment for {role_title}"
+        "practice_project": f"Full-stack production deployment for {role_title}",
+        "key_concepts": [
+            f"End-to-end fullstack architecture for {role_title}",
+            "CI/CD deployment automation & cloud hosting",
+            "Database schema migrations & connection pooling",
+            "System monitoring, logging, and security auditing"
+        ],
+        "learning_guide": f"Integrate all reskilling modules into a production-ready capstone project showcasing full domain competence for {role_title}.",
+        "official_docs_url": "https://github.com/topics/fullstack"
     })
 
     return {

@@ -16,6 +16,10 @@ export const RoadmapPage: React.FC = () => {
   const [customRoleInput, setCustomRoleInput] = useState('');
   const [generatingAgent, setGeneratingAgent] = useState(false);
 
+  // Module Study Hub Modal State
+  const [activeStudyStep, setActiveStudyStep] = useState<RoadmapStep | null>(null);
+  const [checkedConcepts, setCheckedConcepts] = useState<Record<string, boolean>>({});
+
   const availableRolesList = [
     'Python Developer',
     'Java Developer',
@@ -282,6 +286,13 @@ export const RoadmapPage: React.FC = () => {
                     </span>
                     <div className="flex flex-wrap items-center gap-2">
                       <button
+                        onClick={() => setActiveStudyStep(step)}
+                        className="px-3 py-1.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 text-white font-bold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-white" />
+                        <span>Learn & Study Module</span>
+                      </button>
+                      <button
                         onClick={() => navigate(`/tests?tab=prep&module=${encodeURIComponent(step.skill)}`)}
                         className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-semibold rounded-xl inline-flex items-center gap-1.5 transition-all"
                       >
@@ -290,9 +301,9 @@ export const RoadmapPage: React.FC = () => {
                       </button>
                       <button
                         onClick={() => navigate(`/tests?tab=test&module=${encodeURIComponent(step.skill)}`)}
-                        className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl inline-flex items-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all"
+                        className="px-3 py-1.5 bg-indigo-600/20 border border-indigo-500/40 hover:bg-indigo-600 text-indigo-300 hover:text-white font-semibold rounded-xl inline-flex items-center gap-1.5 transition-all"
                       >
-                        <BookOpen className="w-3.5 h-3.5 text-indigo-200" />
+                        <Zap className="w-3.5 h-3.5 text-indigo-400" />
                         <span>Module Skill Test</span>
                       </button>
                       <button
@@ -323,6 +334,151 @@ export const RoadmapPage: React.FC = () => {
               <span>Skill Test</span>
               <ArrowRight className="w-4 h-4 text-white" />
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 📖 MODULE STUDY HUB MODAL */}
+      {activeStudyStep && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl max-w-2xl w-full p-6 sm:p-8 space-y-6 shadow-2xl relative my-8">
+            <button
+              onClick={() => setActiveStudyStep(null)}
+              className="absolute right-5 top-5 w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center font-bold text-sm"
+            >
+              ✕
+            </button>
+
+            {/* Header */}
+            <div className="space-y-2 border-b border-slate-800 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase font-mono font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2.5 py-0.5 rounded">
+                  {targetJob} Module Study Hub
+                </span>
+                <span className="text-xs text-slate-400">Est. Duration: {activeStudyStep.estimated_time}</span>
+              </div>
+              <h2 className="text-2xl font-extrabold text-white flex items-center gap-2">
+                <BookOpen className="w-6 h-6 text-indigo-400" />
+                <span>{activeStudyStep.skill}</span>
+              </h2>
+              <p className="text-xs text-slate-300 leading-relaxed">
+                {activeStudyStep.learning_guide || activeStudyStep.why_it_matters}
+              </p>
+            </div>
+
+            {/* Sub-Skills Checklist */}
+            <div className="space-y-3 bg-slate-950 p-5 rounded-2xl border border-slate-800">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <Target className="w-4 h-4 text-emerald-400" /> Key Concepts & Sub-Skills to Master
+              </h4>
+              <div className="space-y-2">
+                {(activeStudyStep.key_concepts || [
+                  `${activeStudyStep.skill} core syntax & fundamentals`,
+                  `Implementing ${activeStudyStep.skill} in production ${targetJob} services`,
+                  `Performance optimization & error handling`,
+                  `Automated unit tests & CI/CD pipeline integration`
+                ]).map((concept, cIdx) => {
+                  const isChecked = !!checkedConcepts[`${activeStudyStep.skill}-${cIdx}`];
+                  return (
+                    <div
+                      key={cIdx}
+                      onClick={() =>
+                        setCheckedConcepts((prev) => ({
+                          ...prev,
+                          [`${activeStudyStep.skill}-${cIdx}`]: !prev[`${activeStudyStep.skill}-${cIdx}`],
+                        }))
+                      }
+                      className={`p-3 rounded-xl border cursor-pointer flex items-start gap-3 transition-all ${
+                        isChecked
+                          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                          : 'bg-slate-900 border-slate-800/80 text-slate-300 hover:border-slate-700'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => {}}
+                        className="mt-0.5 accent-emerald-500 rounded"
+                      />
+                      <span className="text-xs font-medium leading-relaxed">{concept}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Curated Resources */}
+            <div className="space-y-3">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <ExternalLink className="w-4 h-4 text-indigo-400" /> Official Documentation & Learning Resources
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <a
+                  href={activeStudyStep.official_docs_url || activeStudyStep.resource_link || 'https://docs.python.org/3/'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-3 bg-slate-950 border border-slate-800 hover:border-indigo-500/50 rounded-xl flex items-center justify-between text-xs text-indigo-300 font-semibold transition-all group"
+                >
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-indigo-400" /> Official Documentation
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400" />
+                </a>
+
+                <a
+                  href={`https://coursera.org/search?query=${encodeURIComponent(activeStudyStep.skill)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-3 bg-slate-950 border border-slate-800 hover:border-indigo-500/50 rounded-xl flex items-center justify-between text-xs text-indigo-300 font-semibold transition-all group"
+                >
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400" /> Interactive Courses
+                  </span>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-500 group-hover:text-indigo-400" />
+                </a>
+              </div>
+            </div>
+
+            {/* Practice Project Assignment */}
+            <div className="p-4 bg-indigo-600/10 border border-indigo-500/30 rounded-2xl space-y-1.5">
+              <span className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                <Code className="w-4 h-4 text-indigo-400" /> Hands-On Practice Assignment:
+              </span>
+              <p className="text-xs text-white font-medium">{activeStudyStep.practice_project}</p>
+            </div>
+
+            {/* Footer Action Buttons */}
+            <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+              <button
+                onClick={() => setActiveStudyStep(null)}
+                className="text-xs font-semibold text-slate-400 hover:text-white"
+              >
+                Close Hub
+              </button>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => {
+                    const sk = activeStudyStep.skill;
+                    setActiveStudyStep(null);
+                    navigate(`/tests?tab=prep&module=${encodeURIComponent(sk)}`);
+                  }}
+                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-xl text-xs flex items-center gap-1.5"
+                >
+                  <Layers className="w-3.5 h-3.5 text-emerald-400" /> Practice Questions
+                </button>
+                <button
+                  onClick={() => {
+                    const sk = activeStudyStep.skill;
+                    setActiveStudyStep(null);
+                    navigate(`/tests?tab=test&module=${encodeURIComponent(sk)}`);
+                  }}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/20"
+                >
+                  <BookOpen className="w-3.5 h-3.5 text-indigo-200" /> Take Skill Test
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
