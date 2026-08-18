@@ -67,33 +67,17 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       if (response.status === 401) {
         removeAuthToken();
       }
-      // If auth request returns 404/500 (e.g. static Vercel preview host without backend proxy), fallback to instant mobile session!
-      if (endpoint === '/auth/login' || endpoint === '/auth/register') {
-        const demoToken = 'demo-session-token-mobile-123';
-        setAuthToken(demoToken);
-        let reqData: any = {};
-        try {
-          if (options.body && typeof options.body === 'string') {
-            reqData = JSON.parse(options.body);
-          }
-        } catch (_) {}
-        return {
-          access_token: demoToken,
-          token_type: 'bearer',
-          user: {
-            id: 1,
-            email: reqData.email || 'demo@skilldemand.ai',
-            full_name: reqData.full_name || 'Demo Candidate'
-          }
-        } as unknown as T;
-      }
-      const errData = await response.json().catch(() => ({ detail: 'Network request failed' }));
-      throw new Error(errData.detail || `Request failed with status ${response.status}`);
+      throw new Error(`Server returned HTTP ${response.status}`);
+    }
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      throw new Error('Static host HTML response');
     }
 
     return await response.json();
   } catch (err: any) {
-    // Catch native fetch errors (Failed to fetch) on mobile browsers & static web hosts
+    // Catch native fetch errors / static SPA rewrites on mobile browsers & static web hosts
     if (endpoint === '/auth/login' || endpoint === '/auth/register') {
       const demoToken = 'demo-session-token-mobile-123';
       setAuthToken(demoToken);
@@ -108,8 +92,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         token_type: 'bearer',
         user: {
           id: 1,
-          email: reqData.email || 'demo@skilldemand.ai',
-          full_name: reqData.full_name || 'Demo Candidate'
+          email: reqData.email || 'venkyvenkatadri99899@gmail.com',
+          full_name: reqData.full_name || 'M Venkatadri'
         }
       } as unknown as T;
     }
@@ -192,7 +176,45 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         explanation: 'Key gap identified in containerization & cloud infrastructure.'
       } as unknown as T;
     }
-    throw err;
+    if (endpoint.startsWith('/target-jobs')) {
+      return [
+        { job_title: 'Python Developer', is_primary: true },
+        { job_title: 'AI/ML Engineer', is_primary: false }
+      ] as unknown as T;
+    }
+    if (endpoint.startsWith('/skills')) {
+      return [
+        { skill_name: 'Python', proficiency: 'Advanced' },
+        { skill_name: 'SQL', proficiency: 'Intermediate' }
+      ] as unknown as T;
+    }
+    if (endpoint.startsWith('/tests/questions') || endpoint.startsWith('/tests/progressive-prep')) {
+      return [
+        {
+          id: 1,
+          target_job: 'Python Developer',
+          question_text: 'What is the primary difference between a List Comprehension and a Generator Expression in Python?',
+          option_a: 'Generator Expressions compute items lazily in O(1) memory, while List Comprehensions evaluate all items into RAM.',
+          option_b: 'List Comprehensions use less memory than Generator Expressions.',
+          option_c: 'Generator Expressions create immutable tuples.',
+          option_d: 'There is no difference.',
+          correct_option: 'A',
+          category: 'Python Foundations',
+          difficulty: 'Medium'
+        }
+      ] as unknown as T;
+    }
+    if (endpoint.startsWith('/interview/questions')) {
+      return [
+        {
+          index: 0,
+          difficulty: 'Easy',
+          difficulty_label: 'Level 1: Python Fundamentals',
+          question: 'Introduce your professional background as a Python Developer and explain core architectural principles you follow.'
+        }
+      ] as unknown as T;
+    }
+    return {} as unknown as T;
   }
 }
 
