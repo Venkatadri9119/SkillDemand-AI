@@ -220,6 +220,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         explanation: 'Key gap identified in containerization & cloud infrastructure.'
       } as unknown as T;
     }
+    if (endpoint.startsWith('/tests/history')) {
+      return [
+        {
+          id: 1,
+          target_job: 'Python Developer',
+          score_percentage: 85,
+          total_questions: 5,
+          correct_answers: 4,
+          completed_at: 'Today',
+          category: 'Python Foundations'
+        }
+      ] as unknown as T;
+    }
     if (endpoint.startsWith('/target-jobs')) {
       return [
         { job_title: 'Python Developer', is_primary: true },
@@ -258,7 +271,15 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         }
       ] as unknown as T;
     }
-    return {} as unknown as T;
+    if (endpoint.startsWith('/resume')) {
+      return {
+        ats_score: 88,
+        matching_keywords: ['Python', 'SQL', 'REST API', 'Git'],
+        missing_keywords: ['Docker', 'AWS'],
+        suggestions: ['Add Docker containerization project experience to resume to boost ATS rank.']
+      } as unknown as T;
+    }
+    return { status: 'success' } as unknown as T;
   }
 }
 
