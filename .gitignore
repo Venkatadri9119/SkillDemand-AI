@@ -1,0 +1,35 @@
+# Node dependencies
+node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist/
+frontend/dist/
+build/
+
+# Python / FastAPI
+__pycache__/
+backend/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+ENV/
+env/
+
+# Databases & Cache
+*.db
+backend/app.db
+.sqlite
+.sqlite3
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local Environment Variables
+.env
+.env.local
