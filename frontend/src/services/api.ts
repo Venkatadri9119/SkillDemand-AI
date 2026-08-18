@@ -29,6 +29,13 @@ function getApiBaseUrl(): string {
   return 'http://127.0.0.1:8000/api';
 }
 
+export interface SavedAccount {
+  email: string;
+  full_name: string;
+  token: string;
+  role?: string;
+}
+
 export function getAuthToken(): string | null {
   return localStorage.getItem('token');
 }
@@ -39,6 +46,41 @@ export function setAuthToken(token: string) {
 
 export function removeAuthToken() {
   localStorage.removeItem('token');
+}
+
+export function getSavedAccounts(): SavedAccount[] {
+  try {
+    const raw = localStorage.getItem('saved_user_accounts');
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return [
+    { email: 'venkyvenkatadri99899@gmail.com', full_name: 'M Venkatadri', token: 'demo-session-token-mobile-123', role: 'Python Developer' },
+    { email: 'alex.rivera@tech.co', full_name: 'Alex Rivera', token: 'demo-token-alex', role: 'Fullstack Engineer' },
+    { email: 'sarah.chen@ai.io', full_name: 'Sarah Chen', token: 'demo-token-sarah', role: 'AI/ML Engineer' }
+  ];
+}
+
+export function saveAccount(email: string, full_name: string, token: string, role?: string) {
+  const accounts = getSavedAccounts();
+  const existingIdx = accounts.findIndex(a => a.email.toLowerCase() === email.toLowerCase());
+  if (existingIdx >= 0) {
+    accounts[existingIdx] = { email, full_name, token, role: role || accounts[existingIdx].role };
+  } else {
+    accounts.push({ email, full_name, token, role: role || 'Candidate' });
+  }
+  localStorage.setItem('saved_user_accounts', JSON.stringify(accounts));
+}
+
+export function switchAccount(email: string): SavedAccount | null {
+  const accounts = getSavedAccounts();
+  const target = accounts.find(a => a.email.toLowerCase() === email.toLowerCase());
+  if (target) {
+    setAuthToken(target.token);
+    localStorage.setItem('active_user_email', target.email);
+    localStorage.setItem('active_user_name', target.full_name);
+    return target;
+  }
+  return null;
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -98,10 +140,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       } as unknown as T;
     }
     if (endpoint === '/auth/me') {
+      const savedName = localStorage.getItem('active_user_name') || 'M Venkatadri';
+      const savedEmail = localStorage.getItem('active_user_email') || 'venkyvenkatadri99899@gmail.com';
       return {
         user_id: 1,
-        full_name: 'M Venkatadri',
-        email: 'venkyvenkatadri99899@gmail.com',
+        full_name: savedName,
+        email: savedEmail,
         location: 'San Francisco, CA',
         education: 'B.S. Computer Science',
         experience_level: 'Mid-Level',

@@ -11,8 +11,11 @@ import {
   Settings,
   ChevronDown,
   Sparkles,
+  Users,
+  Check,
 } from 'lucide-react';
 import { Profile } from '../../types';
+import { getSavedAccounts, switchAccount } from '../../services/api';
 
 interface NavbarProps {
   userProfile: Profile | null;
@@ -24,6 +27,7 @@ export const Navbar: React.FC<NavbarProps> = ({ userProfile, onLogout, primaryTa
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showMultiUserModal, setShowMultiUserModal] = useState(false);
   const navigate = useNavigate();
 
   const navItems = [
@@ -129,6 +133,17 @@ export const Navbar: React.FC<NavbarProps> = ({ userProfile, onLogout, primaryTa
                     <button
                       onClick={() => {
                         setDropdownOpen(false);
+                        setShowMultiUserModal(true);
+                      }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-indigo-400 font-semibold hover:bg-indigo-600/20 text-left"
+                    >
+                      <Users className="w-4 h-4 text-indigo-400" />
+                      <span>Switch Account</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false);
                         setShowSettingsModal(true);
                       }}
                       className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white text-left"
@@ -191,6 +206,13 @@ export const Navbar: React.FC<NavbarProps> = ({ userProfile, onLogout, primaryTa
                 </NavLink>
               );
             })}
+            <button
+              onClick={() => setShowMultiUserModal(true)}
+              className="flex flex-col items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium text-indigo-400 hover:bg-indigo-500/10"
+            >
+              <Users className="w-4 h-4 text-indigo-400" />
+              <span className="whitespace-nowrap">Switch</span>
+            </button>
           </div>
         )}
       </header>
@@ -258,6 +280,92 @@ export const Navbar: React.FC<NavbarProps> = ({ userProfile, onLogout, primaryTa
                 className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg text-sm"
               >
                 Save Settings
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🔄 MULTI-USER ACCOUNT ACCESS MODAL */}
+      {showMultiUserModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl space-y-5 relative">
+            <button
+              onClick={() => setShowMultiUserModal(false)}
+              className="absolute right-5 top-5 w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center font-bold text-xs"
+            >
+              ✕
+            </button>
+
+            <div>
+              <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-wider mb-1">
+                <Users className="w-4 h-4" /> Multi-User Account Access
+              </div>
+              <h3 className="text-xl font-bold text-white">Switch Candidate Account</h3>
+              <p className="text-xs text-slate-400 mt-1">
+                Select a candidate account to instantly switch session context, skill assessments, and roadmaps.
+              </p>
+            </div>
+
+            <div className="space-y-2.5">
+              {getSavedAccounts().map((acc, idx) => {
+                const isCurrent = userProfile && userProfile.email.toLowerCase() === acc.email.toLowerCase();
+                return (
+                  <div
+                    key={idx}
+                    onClick={() => {
+                      if (!isCurrent) {
+                        switchAccount(acc.email);
+                        setShowMultiUserModal(false);
+                        window.location.reload();
+                      }
+                    }}
+                    className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all ${
+                      isCurrent
+                        ? 'bg-indigo-600/20 border-indigo-500/50 text-white'
+                        : 'bg-slate-950 border-slate-800 hover:border-slate-700 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs ${
+                        isCurrent ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        {acc.full_name.charAt(0)}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                          {acc.full_name}
+                          {isCurrent && (
+                            <span className="text-[9px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.2 rounded font-mono">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-400">{acc.email} • {acc.role || 'Candidate'}</div>
+                      </div>
+                    </div>
+                    {isCurrent && <Check className="w-4 h-4 text-emerald-400" />}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="pt-3 border-t border-slate-800 flex flex-col gap-2">
+              <button
+                onClick={() => {
+                  setShowMultiUserModal(false);
+                  onLogout();
+                  navigate('/auth?tab=register');
+                }}
+                className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/20"
+              >
+                <span>➕ Add / Login New Account</span>
+              </button>
+              <button
+                onClick={() => setShowMultiUserModal(false)}
+                className="w-full py-2 text-slate-400 hover:text-white font-semibold text-xs text-center"
+              >
+                Cancel
               </button>
             </div>
           </div>
